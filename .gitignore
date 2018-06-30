@@ -62,3 +62,10 @@ target/
 .ipynb_checkpoints
 
 .idea/workspace.xml
+We.pcl
+Model_*.pcl
+example/out
+example/embeddings
+example/training-monolingual-europarl
+example/*.txt
+model_output.txt

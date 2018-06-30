@@ -51,7 +51,7 @@ def weights_Glorot(i, o, name, rng, is_logistic_sigmoid=False, keepdims=False):
     return theano.shared(value=W_values, name=name, borrow=True)
 
 def load(file_path, minibatch_size, x, p=None):
-    from . import models
+    import models
     try:
         import cPickle
     except ImportError:
@@ -249,7 +249,7 @@ class GRU(object):
         }
 
         with open(file_path, 'wb') as f:
-            cPickle.dump(state, f, protocol=cPickle.HIGHEST_PROTOCOL)
+            cPickle.dump(state, f, protocol=0)
 
 
 class GRUstage2(GRU):

@@ -23,7 +23,7 @@ DATA_PATH = "../data"
 # word1 0.123 0.123 ... 0.123
 # word2 0.123 0.123 ... 0.123 etc...
 # e.g. glove.6B.50d.txt
-PRETRAINED_EMBEDDINGS_PATH = None
+PRETRAINED_EMBEDDINGS_PATH = './example/embeddings/glove.6B.50d.txt'
 
 END = "</S>"
 UNK = "<UNK>"
@@ -248,7 +248,7 @@ def create_dev_test_train_split_and_vocabulary(root_path, create_vocabulary, tra
                     embeddings.append(e)
 
             with open("We.pcl", 'wb') as f:
-                cPickle.dump(embeddings, f, cPickle.HIGHEST_PROTOCOL)
+                cPickle.dump(embeddings, f, 0)
         else:
             vocabulary = build_vocabulary(word_counts)
         write_vocabulary(vocabulary, WORD_VOCAB_FILE)
