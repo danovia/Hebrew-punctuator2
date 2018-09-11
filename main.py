@@ -3,6 +3,7 @@ from __future__ import division, print_function
 
 from collections import OrderedDict
 from time import time
+from datetime import datetime
 
 import models
 import data
@@ -22,7 +23,7 @@ except NameError:
 import theano.tensor as T
 import numpy as np
 
-MAX_EPOCHS = 50
+MAX_EPOCHS = 30
 MINIBATCH_SIZE = 128
 L2_REG = 0.0
 CLIPPING_THRESHOLD = 2.0
@@ -77,6 +78,8 @@ def get_minibatch(file_name, batch_size, shuffle, with_pauses=False):
                 P_batch = []
 
 if __name__ == "__main__":
+
+    print(datetime.now())
     
     if len(sys.argv) > 1:
         model_name = sys.argv[1]
@@ -93,7 +96,12 @@ if __name__ == "__main__":
     else:
         sys.exit("'Learning rate' argument missing!")
 
-    model_file_name = "Model_%s_h%d_lr%s.pcl" % (model_name, num_hidden, learning_rate)
+    if len(sys.argv) > 4:
+        is_OneWay = bool(int(sys.argv[4]))
+    else:
+        is_OneWay = False
+
+    model_file_name = "Model_%s_h%d_lr%s%s.pcl" % (model_name, num_hidden, learning_rate, "_oneWay" if is_OneWay else "")
 
     print(num_hidden, learning_rate, model_file_name)
 
@@ -130,7 +138,7 @@ if __name__ == "__main__":
         rng.seed(1)
 
         print("Building model...")
-        net = models.GRU(
+        net = (models.GRUOneWay if is_OneWay else models.GRU)(
             rng=rng,
             x=x,
             minibatch_size=MINIBATCH_SIZE,
@@ -211,3 +219,4 @@ if __name__ == "__main__":
             print("Finished!")
             print("Best validation perplexity was %s" % best_ppl)
             break
+    print(datetime.now())

@@ -5,6 +5,8 @@ import random
 import os
 import sys
 import operator
+import argparse
+
 try:
     import cPickle
 except ImportError:
@@ -17,13 +19,7 @@ from io import open
 import fnmatch
 import shutil
 
-DATA_PATH = "../data"
-
-# path to text file in the format:
-# word1 0.123 0.123 ... 0.123
-# word2 0.123 0.123 ... 0.123 etc...
-# e.g. glove.6B.50d.txt
-PRETRAINED_EMBEDDINGS_PATH = './example/embeddings/glove.6B.50d.txt'
+DATA_PATH = "./transformed_data"
 
 END = "</S>"
 UNK = "<UNK>"
@@ -259,10 +255,14 @@ def create_dev_test_train_split_and_vocabulary(root_path, create_vocabulary, tra
 
 if __name__ == "__main__":
 
-    if len(sys.argv) > 1:
-        path = sys.argv[1]
-    else:
-        sys.exit("The path to stage1 source data directory with txt files is missing")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--stage1', dest='stage1_path', required=True)
+    parser.add_argument('--stage2', dest='stage2_path', required=False)
+    parser.add_argument('--embed', dest='embeddings_path', required=False)
+
+    args = parser.parse_args()
+
+    path = args.stage1_path
 
     replace = False
     if os.path.exists(DATA_PATH):
@@ -282,10 +282,16 @@ if __name__ == "__main__":
         shutil.rmtree(DATA_PATH)
 
     os.makedirs(DATA_PATH)
-    
-    create_dev_test_train_split_and_vocabulary(path, True, TRAIN_FILE, DEV_FILE, TEST_FILE, PRETRAINED_EMBEDDINGS_PATH)
+
+    # path to text file in the format:
+    # word1 0.123 0.123 ... 0.123
+    # word2 0.123 0.123 ... 0.123 etc...
+    # e.g. glove.6B.50d.txt
+    pretrained_embeddings_path = args.embeddings_path
+
+    create_dev_test_train_split_and_vocabulary(path, True, TRAIN_FILE, DEV_FILE, TEST_FILE, pretrained_embeddings_path)
 
     # Stage 2
-    if len(sys.argv) > 2:
-        path2 = sys.argv[2]
+    if args.stage2_path:
+        path2 = args.stage2_path
         create_dev_test_train_split_and_vocabulary(path2, False, TRAIN_FILE2, DEV_FILE2, TEST_FILE2)

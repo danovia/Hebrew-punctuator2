@@ -39,12 +39,15 @@ def skip(line):
 
     return False
 
-def process_line(line):
+def process_line(line, to_concat_morphmemes):
 
     tokens = word_tokenize(line)
     output_tokens = []
 
+    prev_morphemes = []
     for token in tokens:
+
+        delete_morphemes = True
 
         if token in INS_PUNCTS:
             output_tokens.append(INS_PUNCTS[token])
@@ -52,8 +55,15 @@ def process_line(line):
             output_tokens.append(EOS_PUNCTS[token])
         elif is_number(token):
             output_tokens.append(NUM)
+        elif to_concat_morphmemes and len(token) == 1:
+            prev_morphemes.append(token.lower())
+            delete_morphemes = False
         else:
-            output_tokens.append(token.lower())
+            full_word = "".join(prev_morphemes) + token.lower()
+            output_tokens.append(full_word)
+
+        if delete_morphemes:
+            prev_morphemes = []
 
     return untokenize(" ".join(output_tokens) + " ")
 
@@ -71,7 +81,7 @@ with open(sys.argv[2], 'w', encoding='utf-8') as out_txt:
                 skipped += 1
                 continue
 
-            line = process_line(line)
+            line = process_line(line, bool(int(sys.argv[3])))
 
             out_txt.write(line + '\n')
 
