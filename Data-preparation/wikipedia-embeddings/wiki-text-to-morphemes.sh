@@ -1,5 +1,5 @@
 #!/bin/bash
-HEBDEPARSER_DIR="/home/alex/repos/danzu/hebdepparser"
+HEBDEPARSER_DIR="./hebdepparser-dir/hebdepparser"
 WIKI_FILE="`pwd`/`ls | grep xa | grep -v log`"
 WIKI_LINE_READ_OFFSET=0
 PORT=$((8080 + `basename "$PWD"`))
@@ -16,4 +16,4 @@ kill -9 `ps -ef | grep "python2.7 parse.py $WIKI_LINE_READ_OFFSET $PORT" | grep 
 cat "${WIKI_FILE}" | python2.7 ${HEBDEPARSER_DIR}/parse.py $WIKI_LINE_READ_OFFSET $PORT &>> "parser-`ls | grep xa | grep -v log`.log" &
 less +F "parser-`ls | grep xa | grep -v log`.log"
 
-echo "Finished, bye!"
+echo "Finished initilization, see parser-`ls | grep xa | grep -v log`.log for more information."

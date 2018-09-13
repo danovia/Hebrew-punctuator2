@@ -18,11 +18,11 @@
 5. `cd ./hebdepparser-dir; bash get-hebdepparser.sh`
     - It will download HebDepParser, and replace certain files editted for parallel run.
 
-6. Run in each directory from 0 to 9 the script `bash wiki-text-to-morphemes.sh`
+6. Run in each directory from 0 to 9 the script `wiki-text-to-morphemes.sh`
     - You can see the script running in the parser-xa*.log file.
     - It may take 2-3 days for a high-end server to finish this task.
 
-7. `bash merge-and-filter-10-wiki-parts.sh`
+7. `cd ..; bash merge-and-filter-10-wiki-parts.sh`
     - It should create the files `wiki-he-morph-0.txt` to `wiki-he-morph-9.txt` and `wiki-he-morph-FULL.txt`.
 
 8. `python3 fasttxt.py`
