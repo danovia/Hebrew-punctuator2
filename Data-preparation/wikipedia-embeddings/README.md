@@ -31,6 +31,6 @@
       - `wiki.he-morph.fasttext.CBOW-model.vec`
     - Those files are your embddings, choose one of them and enjoy!
 
-# Citing
+# Acknowledgements
 - Based on **[wordembedding-hebrew by liorshk](https://github.com/liorshk/wordembedding-hebrew)**.
 - Uses **[HebDepParser](https://www.cs.bgu.ac.il/~yoavg/software/hebparsers/hebdepparser/)** by Yoav Goldberg, certain files where editted for parallel run, see them in `./hebdeparser-dir/hebdepparser_editted_files` .
