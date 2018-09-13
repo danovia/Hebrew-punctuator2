@@ -1,5 +1,5 @@
 #!/bin/bash
-HEBDEPARSER_DIR="./hebdepparser-dir/hebdepparser"
+HEBDEPARSER_DIR="../hebdepparser-dir/hebdepparser"
 WIKI_FILE="`pwd`/`ls | grep xa | grep -v log`"
 WIKI_LINE_READ_OFFSET=0
 PORT=$((8080 + `basename "$PWD"`))
