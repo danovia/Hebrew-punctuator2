@@ -66,8 +66,8 @@ We.pcl
 Model_*.pcl
 example/out
 example/embeddings
-example/training-hebrew
-example/training-hebrew-full-words
+example/training-hebrew-morph
+example/training-hebrew-full
 results/outputs
 results/models
 transformed_data
