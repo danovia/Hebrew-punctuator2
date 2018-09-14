@@ -1,37 +1,44 @@
 #!/bin/bash
-# Grid params
-LR_ARRAY=(0.02)
-HIDDEN_ARRAY=(256 512)
-IS_ONE_WAY_ARRAY=(0 1)
 
-# Other params
-OUTPUT_DIR=testResults
+RESULTS_DIR=./results
+EVALUATIONS_DIR=${RESULTS_DIR}/evaluations
+MODELS_DIR=${RESULTS_DIR}/models
+OUTPUTS_DIR=${RESULTS_DIR}/outputs
+
 INPUT_FILE=./example/out/ep.dev.txt
 
 # Begin code:
-mkdir $OUTPUT_DIR
+mkdir $EVALUATIONS_DIR
+mkdir $MODELS_DIR
+mkdir $OUTPUTS_DIR
 
-TEMP_OUTPUT_FILE=temp_model_output.txt
-MODEL_NAME=morphTest
+function run_data() {
+    local embeddings=$1
+    local produce_data_cmd=$2
 
-for LR in ${LR_ARRAY[*]}; do
-	for HIDDEN in ${HIDDEN_ARRAY[*]}; do
-	    for IS_ONE_WAY in ${IS_ONE_WAY_ARRAY[*]}; do
-            TEST_NAME=h${HIDDEN}_lr${LR}$([ "$IS_ONE_WAY" = 1 ] && echo "_oneWay" || echo "")
-            TEMP_MODEL_FILE=Model_${MODEL_NAME}_${TEST_NAME}.pcl
+    rm We.pcl
+    rm -rf transformed_data
 
-            echo start training $TEST_NAME
-            python main.py $MODEL_NAME $HIDDEN $LR $IS_ONE_WAY
+    eval $produce_data_cmd | ./example/generate_final_dataset.sh 0
 
-            echo start testing $TEST_NAME
-            python punctuator.py $TEMP_MODEL_FILE $TEMP_OUTPUT_FILE < $INPUT_FILE
+    python data.py --stage1=./example/out --embed=$embeddings
+}
 
-            echo compute error for $TEST_NAME
-            python error_calculator.py $INPUT_FILE $TEMP_OUTPUT_FILE > ${OUTPUT_DIR}/test_results_${TEST_NAME}.txt
+function run_model() {
+    local hidden=$1
+    local lr=$2
+    local isOneWay=$3
+    local model_name=$4
 
-            rm $TEMP_MODEL_FILE
-        done
-	done
-done
+    local model_substr=h${hidden}_lr${lr}$([ "$isOneWay" = 1 ] && echo "_oneWay" || echo "")
+    local evaluation_file=${EVALUATIONS_DIR}/Evaluation_${model_name}_${model_substr}.txt
+    local model_file=${MODELS_DIR}/Model_${model_name}_${model_substr}.pcl
+    local output_file=${OUTPUTS_DIR}/Output_${model_name}_${model_substr}.txt
 
-rm $TEMP_OUTPUT_FILE
+    python main.py $model_name $hidden $lr $isOneWay
+    python punctuator.py $model_file $output_file < $INPUT_FILE
+    python error_calculator.py $INPUT_FILE $output_file > $evaluation_file
+}
+
+run_data ./example/embeddings/wiki.he-morph.window10.fasttext.skipgram-model.vec "./example/convert_table_dataset.sh ./example/training-hebrew/ | python ./example/untransliterate.py"
+run_model 512 0.02 0 morph_fasttext10

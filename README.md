@@ -75,7 +75,7 @@ Some model hyperparameters can be configured in the headings of main.py and main
 
 First step is data conversion. Assuming that preprocessed and cleaned *.train.txt, *.dev.txt and *.test.txt files are located in `<data_dir>`, the conversion can be initiated with:
 
-`python data.py <data_dir>`
+`python data.py --stage1=<data_dir>`
 
 If you have second stage data and pretrained embeddings as well, then:
 
