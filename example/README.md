@@ -3,13 +3,13 @@ This example produces the preprocessed Europarl English corpus that can be then 
 Requires nltk
 
 Usage example:
-`./run.sh`
+`./convert_table_dataset.sh training-hebrew/ | python untransliterate.py | ./generate_final_dataset.sh 0`
 
 `cd ..`
 
-`python data.py ./example/out`
+`python data.py --stage1=./example/out --embed=./example/wiki.he-morph.fasttext.skipgram-model.vec`
 
-`python main.py ep 256 0.02`
+`python main.py ep 256 0.02 0`
 
 `python play_with_model.py Model_ep_h256_lr0.02.pcl`
 

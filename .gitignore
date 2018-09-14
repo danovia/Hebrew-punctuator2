@@ -67,5 +67,6 @@ Model_*.pcl
 example/out
 example/embeddings
 example/training-hebrew
+example/training-hebrew-full-words
 model_output.txt
 transformed_data
