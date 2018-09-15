@@ -1,22 +1,25 @@
 # coding: utf-8
-from __future__ import division
+from __future__ import division, print_function
 
 import random
 import os
 import sys
 import operator
-import cPickle
-import codecs
+import argparse
+
+try:
+    import cPickle
+except ImportError:
+    import _pickle as cPickle
+try:
+    input = raw_input
+except NameError:
+    pass
+from io import open
 import fnmatch
 import shutil
 
-DATA_PATH = "../data"
-
-# path to text file in the format:
-# word1 0.123 0.123 ... 0.123
-# word2 0.123 0.123 ... 0.123 etc...
-# e.g. glove.6B.50d.txt
-PRETRAINED_EMBEDDINGS_PATH = None
+DATA_PATH = "./transformed_data"
 
 END = "</S>"
 UNK = "<UNK>"
@@ -77,16 +80,16 @@ def write_vocabulary(vocabulary, file_name):
     if UNK not in vocabulary:
         vocabulary.append(UNK)
 
-    print "Vocabulary size: %d" % len(vocabulary)
+    print("Vocabulary size: %d" % len(vocabulary))
 
-    with codecs.open(file_name, 'w', 'utf-8') as f:
+    with open(file_name, 'w', encoding='utf-8') as f:
         f.write("\n".join(vocabulary))
 
 def iterable_to_dict(arr):
     return dict((x.strip(), i) for (i, x) in enumerate(arr))
 
 def read_vocabulary(file_name):
-    with codecs.open(file_name, 'r', 'utf-8') as f:
+    with open(file_name, 'r', encoding='utf-8') as f:
         return iterable_to_dict(f.readlines())
 
 def write_processed_dataset(input_files, output_file):
@@ -115,7 +118,7 @@ def write_processed_dataset(input_files, output_file):
 
     for input_file in input_files:
 
-        with codecs.open(input_file, 'r', 'utf-8') as text:
+        with open(input_file, 'r', encoding='utf-8') as text:
 
             for line in text:
 
@@ -196,7 +199,7 @@ def write_processed_dataset(input_files, output_file):
 
                         last_eos_idx = 0 # sequence always starts with a new sentence
 
-    print "%.2f%% UNK-s in %s" % (num_unks / num_total * 100, output_file)
+    print("%.2f%% UNK-s in %s" % (num_unks / num_total * 100, output_file))
 
     dump(data, output_file)
 
@@ -224,7 +227,7 @@ def create_dev_test_train_split_and_vocabulary(root_path, create_vocabulary, tra
                 train_txt_files.append(path)
 
                 if create_vocabulary and not pretrained_embeddings_path:
-                    with codecs.open(path, 'r', 'utf-8') as text:
+                    with open(path, 'r', encoding='utf-8') as text:
                         for line in text:
                             add_counts(word_counts, line)
 
@@ -232,7 +235,7 @@ def create_dev_test_train_split_and_vocabulary(root_path, create_vocabulary, tra
         if pretrained_embeddings_path:
             vocabulary = []
             embeddings = []
-            with codecs.open(pretrained_embeddings_path, 'r', 'utf-8') as f:
+            with open(pretrained_embeddings_path, 'r', encoding='utf-8') as f:
                 for line in f:
                     line = line.split()
                     w = line[0]
@@ -241,7 +244,7 @@ def create_dev_test_train_split_and_vocabulary(root_path, create_vocabulary, tra
                     embeddings.append(e)
 
             with open("We.pcl", 'wb') as f:
-                cPickle.dump(embeddings, f, cPickle.HIGHEST_PROTOCOL)
+                cPickle.dump(embeddings, f, 0)
         else:
             vocabulary = build_vocabulary(word_counts)
         write_vocabulary(vocabulary, WORD_VOCAB_FILE)
@@ -252,16 +255,20 @@ def create_dev_test_train_split_and_vocabulary(root_path, create_vocabulary, tra
 
 if __name__ == "__main__":
 
-    if len(sys.argv) > 1:
-        path = sys.argv[1]
-    else:
-        sys.exit("The path to stage1 source data directory with txt files is missing")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--stage1', dest='stage1_path', required=True)
+    parser.add_argument('--stage2', dest='stage2_path', required=False)
+    parser.add_argument('--embed', dest='embeddings_path', required=False)
+
+    args = parser.parse_args()
+
+    path = args.stage1_path
 
     replace = False
     if os.path.exists(DATA_PATH):
 
         while True:
-            resp = raw_input("Data path '%s' already exists. Do you want to:\n[r]eplace the files in existing data path?\n[e]xit?\n>" % DATA_PATH)
+            resp = input("Data path '%s' already exists. Do you want to:\n[r]eplace the files in existing data path?\n[e]xit?\n>" % DATA_PATH)
             resp = resp.lower().strip()
             if resp not in ('r', 'e'):
                 continue
@@ -275,10 +282,16 @@ if __name__ == "__main__":
         shutil.rmtree(DATA_PATH)
 
     os.makedirs(DATA_PATH)
-    
-    create_dev_test_train_split_and_vocabulary(path, True, TRAIN_FILE, DEV_FILE, TEST_FILE, PRETRAINED_EMBEDDINGS_PATH)
+
+    # path to text file in the format:
+    # word1 0.123 0.123 ... 0.123
+    # word2 0.123 0.123 ... 0.123 etc...
+    # e.g. glove.6B.50d.txt
+    pretrained_embeddings_path = args.embeddings_path
+
+    create_dev_test_train_split_and_vocabulary(path, True, TRAIN_FILE, DEV_FILE, TEST_FILE, pretrained_embeddings_path)
 
     # Stage 2
-    if len(sys.argv) > 2:
-        path2 = sys.argv[2]
+    if args.stage2_path:
+        path2 = args.stage2_path
         create_dev_test_train_split_and_vocabulary(path2, False, TRAIN_FILE2, DEV_FILE2, TEST_FILE2)

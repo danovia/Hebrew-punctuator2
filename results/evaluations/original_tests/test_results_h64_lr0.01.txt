@@ -1,0 +1,13 @@
+----------------------------------------------
+PUNCTUATION      PRECISION RECALL    F-SCORE  
+b',COMMA           57.4      35.199999999999996 43.6     '
+b'.PERIOD          75.2      47.9      58.5     '
+b'?QUESTIONMARK    75.4      30.9      43.8     '
+b'!EXCLAMATIONMARK nan       0.0       nan      '
+b':COLON           87.0      76.4      81.39999999999999'
+b';SEMICOLON       nan       0.0       nan      '
+b'-DASH            70.89999999999999 67.2      69.0     '
+----------------------------------------------
+Overall          68.4      45.7      54.7     
+Err: 9.46%
+SER: 60.9%

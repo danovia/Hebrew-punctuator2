@@ -1,8 +1,13 @@
 # coding: utf-8
-from __future__ import division
+from __future__ import division, print_function
 
 import theano
-import cPickle
+try:
+    import cPickle
+    cpickle_options = {}
+except ImportError:
+    import _pickle as cPickle
+    cpickle_options = { 'encoding': 'latin-1' }
 import os
 import theano.tensor as T
 import numpy as np
@@ -47,12 +52,15 @@ def weights_Glorot(i, o, name, rng, is_logistic_sigmoid=False, keepdims=False):
 
 def load(file_path, minibatch_size, x, p=None):
     import models
-    import cPickle
+    try:
+        import cPickle
+    except ImportError:
+        import _pickle as cPickle
     import theano
     import numpy as np
 
     with open(file_path, 'rb') as f:
-        state = cPickle.load(f)
+        state = cPickle.load(f, **cpickle_options)
 
     Model = getattr(models, state["type"])
 
@@ -128,9 +136,9 @@ class GRU(object):
         # input model
         pretrained_embs_path = "We.pcl"
         if os.path.exists(pretrained_embs_path):
-            print "Found pretrained embeddings in '%s'. Using them..." % pretrained_embs_path
+            print("Found pretrained embeddings in '%s'. Using them..." % pretrained_embs_path)
             with open(pretrained_embs_path, 'rb') as f:
-                We = cPickle.load(f)
+                We = cPickle.load(f, **cpickle_options)
             n_emb = len(We[0])
             We.append([0.1]*n_emb) # END
             We.append([0.0]*n_emb) # UNK - both quite arbitrary initializations
@@ -211,7 +219,7 @@ class GRU(object):
             non_sequences=[self.Wa_h, self.Wa_y, self.Wf_h, self.Wf_c, self.Wf_f, self.bf, self.Wy, self.by, context, projected_context],
             outputs_info=[self.GRU.h0, None, None, None])
 
-        print "Number of parameters is %d" % sum(np.prod(p.shape.eval()) for p in self.params)
+        print("Number of parameters is %d" % sum(np.prod(p.shape.eval()) for p in self.params))
 
         self.L1 = sum(abs(p).sum() for p in self.params)
         self.L2_sqr = sum((p**2).sum() for p in self.params)
@@ -222,7 +230,10 @@ class GRU(object):
         return -T.sum(T.log(output[T.arange(num_outputs), y.flatten()]))
 
     def save(self, file_path, gsums=None, learning_rate=None, validation_ppl_history=None, best_validation_ppl=None, epoch=None, random_state=None):
-        import cPickle
+        try:
+            import cPickle
+        except ImportError:
+            import _pickle as cPickle
         state = {
             "type":                     self.__class__.__name__,
             "n_hidden":                 self.n_hidden,
@@ -238,7 +249,69 @@ class GRU(object):
         }
 
         with open(file_path, 'wb') as f:
-            cPickle.dump(state, f, protocol=cPickle.HIGHEST_PROTOCOL)
+            cPickle.dump(state, f, protocol=0)
+
+
+class GRUOneWay(GRU):
+
+    def __init__(self, rng, x, minibatch_size, n_hidden, x_vocabulary, y_vocabulary, **kargs):
+
+        x_vocabulary_size = len(x_vocabulary)
+        y_vocabulary_size = len(y_vocabulary)
+
+        self.n_hidden = n_hidden
+        self.x_vocabulary = x_vocabulary
+        self.y_vocabulary = y_vocabulary
+
+        # input model
+        pretrained_embs_path = "We.pcl"
+        if os.path.exists(pretrained_embs_path):
+            print("Found pretrained embeddings in '%s'. Using them..." % pretrained_embs_path)
+            with open(pretrained_embs_path, 'rb') as f:
+                We = cPickle.load(f, **cpickle_options)
+            n_emb = len(We[0])
+            We.append([0.1]*n_emb) # END
+            We.append([0.0]*n_emb) # UNK - both quite arbitrary initializations
+
+            We = np.array(We).astype(theano.config.floatX)
+            self.We = theano.shared(value=We, name="We", borrow=True)
+        else:
+            n_emb = n_hidden
+            self.We = weights_Glorot(x_vocabulary_size, n_emb, 'We', rng) # Share embeddings between forward and backward model
+
+        # output model
+        self.GRU = GRULayer(rng=rng, n_in=n_emb, n_out=n_hidden, minibatch_size=minibatch_size)
+        self.Wy = weights_const(n_hidden, y_vocabulary_size, 'Wy', 0)
+        self.by = weights_const(1, y_vocabulary_size, 'by', 0)
+
+        self.params = [self.We,
+                       self.Wy, self.by]
+
+        self.params += self.GRU.params
+
+        x_emb = self.We[x.flatten()].reshape((x.shape[0], minibatch_size, n_emb))
+
+        def recurrence(x_t, h_tm1, Wy, by):
+
+            h_t = self.GRU.step(x_t=x_t, h_tm1=h_tm1)
+
+            z = T.dot(h_t, Wy) + by
+            y_t = T.nnet.softmax(z)
+
+            return [h_t, y_t]
+
+        [_, recurrence_output], _ = theano.scan(fn=recurrence,
+            sequences=[x_emb],
+            non_sequences=[self.Wy, self.by],
+            outputs_info=[self.GRU.h0, None])
+
+        self.y = recurrence_output[1:] # Ignore the first output, we predict always for the previous word
+        # (looking only at previous words, yielded much worse results)
+
+        print("Number of parameters is %d" % sum(np.prod(p.shape.eval()) for p in self.params))
+
+        self.L1 = sum(abs(p).sum() for p in self.params)
+        self.L2_sqr = sum((p**2).sum() for p in self.params)
 
 
 class GRUstage2(GRU):
@@ -276,8 +349,8 @@ class GRUstage2(GRU):
             non_sequences=[self.Wy, self.by],
             outputs_info=[self.GRU.h0, None])
 
-        print "Number of parameters is %d" % sum(np.prod(p.shape.eval()) for p in self.params)
-        print "Number of parameters with stage1 params is %d" % sum(np.prod(p.shape.eval()) for p in self.params + self.stage1.params)
+        print("Number of parameters is %d" % sum(np.prod(p.shape.eval()) for p in self.params))
+        print("Number of parameters with stage1 params is %d" % sum(np.prod(p.shape.eval()) for p in self.params + self.stage1.params))
 
         self.L1 = sum(abs(p).sum() for p in self.params)
         self.L2_sqr = sum((p**2).sum() for p in self.params)

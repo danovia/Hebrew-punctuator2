@@ -48,7 +48,7 @@ PUNCTUATION      | PRECISION | RECALL    | F-SCORE
 _Overall_        | _75.7_    | _73.9_    | _74.8_
 
 # Requirements
-* Python 2.7
+* Python 3.6
 * Numpy
 * Theano
 
@@ -75,19 +75,19 @@ Some model hyperparameters can be configured in the headings of main.py and main
 
 First step is data conversion. Assuming that preprocessed and cleaned *.train.txt, *.dev.txt and *.test.txt files are located in `<data_dir>`, the conversion can be initiated with:
 
-`python data.py <data_dir>`
+`python data.py --stage1=<data_dir>`
 
-If you have second stage data as well, then:
+If you have second stage data and pretrained embeddings as well, then:
 
-`python data.py <data_dir> <second_stage_data_dir>`
+`python data.py --stage1=<data_dir> --stage2=<second_stage_data_dir> --embed=<pretrained_embeddings_path>`
 
 
 
 The first stage can be trained with:
 
-`python main.py <model_name> <hidden_layer_size> <learning_rate>`
+`python main.py <model_name> <hidden_layer_size> <learning_rate> <isOneWay(0 or 1)>`
 
-e.g `python main.py <model_name> 256 0.02` works well.
+e.g `python main.py <model_name> 256 0.02 0` works well.
 
 
 
