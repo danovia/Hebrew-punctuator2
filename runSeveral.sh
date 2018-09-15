@@ -38,6 +38,15 @@ function run_model() {
     python error_calculator.py $INPUT_FILE $output_file > $evaluation_file
 }
 
+function run_baseline() {
+    local gramsBefore=$1
+    local gramsAfter=$2
+
+    local evaluation_file=${EVALUATIONS_DIR}/Evaluation_baseline_${gramsBefore}before_${gramsAfter}after.txt
+
+    python baseline.py $gramsBefore $gramsAfter > $evaluation_file
+}
+
 #run_data ./example/embeddings/wiki.he-morph.window10.fasttext.skipgram-model.vec "./example/convert_table_dataset.sh ./example/training-hebrew-morph/ | python ./example/untransliterate.py"
 #run_model 512 0.02 0 morph_fasttext10
 #run_model 256 0.02 0 morph_fasttext10
@@ -48,3 +57,9 @@ function run_model() {
 #run_model 512 0.02 0 full_fasttext5
 #run_data ./example/embeddings/wiki.he-regular.window5.word2vec.skipgram-model.vec "cat ./example/training-hebrew-full/*.txt"
 #run_model 512 0.02 0 full_word2vec5
+
+#run_baseline 1 1
+#run_baseline 1 2
+#run_baseline 2 1
+#run_baseline 2 0
+#run_baseline 0 2

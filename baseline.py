@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 
 import data
@@ -18,7 +19,10 @@ def get_dataset(file_name):
 	Y = []
 
 	for subsequence in dataset:
-		X.append([START_SYMBOL] * (N_GRAMS_BEFORE - 1) + subsequence[0][:-1] + [END_SYMBOL] * N_GRAMS_AFTER)
+		X.append([START_SYMBOL] * max(0, N_GRAMS_BEFORE - 1) +
+				 subsequence[0][0 if N_GRAMS_BEFORE > 0 else 1:-1] +
+				 [END_SYMBOL] * N_GRAMS_AFTER)
+
 		Y.append(subsequence[1])
 
 	return X, Y
@@ -28,7 +32,7 @@ def train(X, Y):
 	train_data_dict = {}
 
 	for X_sub, Y_sub in zip(X,Y):
-		for i in range(0, len(X_sub) - ((N_GRAMS_BEFORE - 1) + N_GRAMS_AFTER)):
+		for i in range(0, len(X_sub) - (N_GRAMS_BEFORE + N_GRAMS_AFTER - 1)):
 			n_recent_grams = X_sub[i: i + N_GRAMS_BEFORE + N_GRAMS_AFTER]
 
 			latest_dict = traverse_ngrams(n_recent_grams, train_data_dict)
@@ -45,7 +49,7 @@ def predict(X, train_data_dict):
 		Y_sub = []
 		Y.append(Y_sub)
 
-		for i in range(0, len(X_sub) - ((N_GRAMS_BEFORE - 1) + N_GRAMS_AFTER)):
+		for i in range(0, len(X_sub) - (N_GRAMS_BEFORE + N_GRAMS_AFTER - 1)):
 			n_recent_grams = X_sub[i: i + N_GRAMS_BEFORE + N_GRAMS_AFTER]
 
 			latest_dict = traverse_ngrams(n_recent_grams, train_data_dict)
@@ -88,19 +92,20 @@ if __name__ == "__main__":
 	word_vocabulary = data.read_vocabulary(data.WORD_VOCAB_FILE)
 	punctuation_vocabulary = data.iterable_to_dict(data.PUNCTUATION_VOCABULARY)
 
-	print("Got vocabulary and punctuations")
+	if len(sys.argv) > 2:
+		N_GRAMS_BEFORE = int(sys.argv[1])
+		N_GRAMS_AFTER = int(sys.argv[2])
+
+	print("The model will use %s grams before, and %s grams after, to predict the punctuation in a given slot."
+		  % (N_GRAMS_BEFORE, N_GRAMS_AFTER))
 
 	X_train, Y_train = get_dataset(data.TRAIN_FILE)
-
-	print("Got train dataset")
 
 	train_data_dict = train(X_train, Y_train)
 
 	print("Trained")
 
 	X_test, Y_test = get_dataset(data.TEST_FILE)
-
-	print("Got dev dataset")
 
 	Y_test_comp = predict(X_test, train_data_dict)
 

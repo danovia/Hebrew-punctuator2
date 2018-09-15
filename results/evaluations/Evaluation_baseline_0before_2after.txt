@@ -1,0 +1,5 @@
+The model will use 0 grams before, and 2 grams after, to predict the punctuation in a given slot.
+Trained
+Predicted
+SER: 89.0
+accuracy: 83.61320582906612
