@@ -28,7 +28,11 @@
 8. `cd fasttext; python3 fasttxt.py`
     - It should create the file:
       - `wiki.he-morph.fasttext.skipgram-model.vec`
-    - This is the morpheme-embeddings file, enjoy!
+
+9. NOTE: To achieve the final embeddings file in a the expected format for punctuator2, 
+    remove the first line from the embeddings file (containing the dimensions of the data).
+    
+    - This is the final morpheme-embeddings file, enjoy!
 
 
 # Acknowledgements
